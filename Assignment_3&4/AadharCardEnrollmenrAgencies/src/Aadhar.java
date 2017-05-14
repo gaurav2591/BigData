@@ -17,14 +17,14 @@ public class Aadhar {
 	public static class AaadharMapper extends Mapper<LongWritable,Text,Text,IntWritable>{
 		private Text finalKey = new Text();
 		private IntWritable value = new IntWritable();
-		public void map(LongWritable ofst,Text val,Context context) throws IOException, InterruptedException{
+		public void map(LongWritable ofst,Text val,Context ctx) throws IOException, InterruptedException{
 			String str = val.toString();
 			String[] rec = str.split(",");
 			if(!rec[1].equalsIgnoreCase("Enrolment Agency")){
 				if(Integer.parseInt(rec[9]) > 0){
 					finalKey.set(rec[1]);
 					value.set(Integer.parseInt(rec[9]));
-				   context.write(finalKey,value);	
+				   ctx.write(finalKey,value);	
 				}
 			}
 		}
@@ -35,22 +35,20 @@ public class Aadhar {
 		
     	Map<String,Integer> map = new HashMap();
     	
-		public void reduce(Text key, Iterable<IntWritable> values,Context context) throws IOException, InterruptedException{
-			int sum = 0;
+		public void reduce(Text key, Iterable<IntWritable> values,Context ctx) throws IOException, InterruptedException{
+			int total = 0;
 			for(IntWritable value : values){
-				sum+=value.get();
+				total = total + value.get();
 			}
-			map.put(key.toString(),sum);
+			map.put(key.toString(),total);
 		}
 		
 		@Override
-		protected void cleanup(
-				org.apache.hadoop.mapreduce.Reducer.Context context)
+		protected void cleanup(Context ctx)
 				throws IOException, InterruptedException {
-			// TODO Auto-generated method stub
-			context.write(new Text("Enrollment agencies rejected"),new IntWritable(map.size()));
-			for(Map.Entry<String,Integer> entry : map.entrySet()){
-				context.write(new Text(entry.getKey()),new IntWritable(entry.getValue()));
+			ctx.write(new Text("Total Num of Agencies rejected"),new IntWritable(map.size()));
+			for(Map.Entry<String,Integer> entrySet : map.entrySet()){
+				ctx.write(new Text(entrySet.getKey()),new IntWritable(entrySet.getValue()));
 			}
 		}
 	}	
@@ -58,7 +56,7 @@ public class Aadhar {
 	public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
 		 
 		  Configuration  conf = new Configuration();
-		  Job job = Job.getInstance(conf,"Enrollment agencies rejected");
+		  Job job = Job.getInstance(conf,"Total Num of Agencies rejected");
 		  job.setJarByClass(Aadhar.class);
 		  job.setMapperClass(AaadharMapper.class);
 		  job.setReducerClass(AaadharReducer.class);

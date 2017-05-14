@@ -1,5 +1,6 @@
 import java.io.BufferedReader;
 import java.io.DataInputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URI;
@@ -28,14 +29,9 @@ public static class AaadharMapper extends Mapper<LongWritable,Text,Text,IntWrita
 		protected void setup(Context context) throws java.io.IOException, InterruptedException{
 			
 			super.setup(context);
-
-		    URI[] files = context.getCacheFiles();
-
-		    Path path = new Path(files[0]);
-		    FileSystem fileSystem = FileSystem.get(context.getConfiguration());
-			FSDataInputStream fsDataInputStream = fileSystem.open(path);
-		    DataInputStream dataInputStream = new DataInputStream(fsDataInputStream);
-		    BufferedReader br = new BufferedReader(new InputStreamReader(dataInputStream));
+			 URI[] cacheFiles = context.getCacheFiles();
+			 Path path1 = new Path(cacheFiles[0]);
+			 BufferedReader br = new BufferedReader(new FileReader(path1.getName()));
 			String eachLine = br.readLine();
 			while(eachLine != null) {
 				String[] rec = eachLine.split(",");
@@ -55,11 +51,15 @@ public static class AaadharMapper extends Mapper<LongWritable,Text,Text,IntWrita
 
 		
 		
-		
-		public void map(LongWritable ofs,Text value,Context cntx) throws IOException, InterruptedException{
-			String[] rec = value.toString().split(",");
+		private Text finalKey = new Text();
+		private IntWritable value = new IntWritable();
+		public void map(LongWritable ofs,Text val,Context cntx) throws IOException, InterruptedException{
+			String str = val.toString();
+			String[] rec = str.split(",");
 			if(!rec[2].equalsIgnoreCase("State") && map.get(rec[2]) != null){
-				cntx.write(new Text(map.get(rec[2])),new IntWritable(Integer.parseInt(rec[8])));				
+				finalKey.set(map.get(rec[2]));
+				value.set(Integer.parseInt(rec[8]));
+				cntx.write(finalKey,value);				
 			}
 		}
 		
@@ -67,23 +67,22 @@ public static class AaadharMapper extends Mapper<LongWritable,Text,Text,IntWrita
 	
     public static class AaadharReducer extends Reducer<Text,IntWritable,Text,IntWritable>{
 		
-		Map<String,Integer> count = new TreeMap();
+		Map<String,Integer> map = new TreeMap();
     	
     	public void reduce(Text key, Iterable<IntWritable> values,Context context) throws IOException, InterruptedException{
-			int sum = 0;
+			int total = 0;
 			for(IntWritable value : values){
-				sum+=value.get();
+				total+=value.get();
 			}
-			count.put(key.toString(),sum);
+			map.put(key.toString(),total);
 		}
 		
 		@Override
 		protected void cleanup(
-				org.apache.hadoop.mapreduce.Reducer.Context context)
+				Context context)
 				throws IOException, InterruptedException {
-			// TODO Auto-generated method stub
 			super.cleanup(context);
-			for(Map.Entry<String,Integer> entry : count.entrySet()){
+			for(Map.Entry<String,Integer> entry : map.entrySet()){
 				context.write(new Text(entry.getKey()),new IntWritable(entry.getValue()));
 			}
 		}
@@ -92,7 +91,7 @@ public static class AaadharMapper extends Mapper<LongWritable,Text,Text,IntWrita
 	public static void main(String[] args) throws IOException, ClassNotFoundException, InterruptedException {
 		 
 		  Configuration  conf = new Configuration();
-		  Job job = Job.getInstance(conf,"State abbr and total aadhar generated");
+		  Job job = Job.getInstance(conf,"Aadhar Card Each State");
 		  job.setJarByClass(Aadhar.class);
 		  job.setMapperClass(AaadharMapper.class);
 	      job.setReducerClass(AaadharReducer.class);
