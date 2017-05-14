@@ -1,0 +1,153 @@
+Assignment 1
+-------------
+
+Excrcise 1
+-----------
+
+Part 1
+------- 
+1. hdfs dfs -ls /user/gaurav/
+
+Part 2
+-------
+
+1. hdfs dfs -mkdir /user/assignment1
+2. hdfs dfs -put fileToBeUpload.txt /user/assignment1
+
+
+Part 3
+-------
+
+1.  hdfs dfs -get /user/assignment1/fileToBeUpload.txt .
+
+
+Part 4
+-------
+
+1.  hdfs dfs -moveFromLocal fileToBeUpload.txt /user/assignment1
+
+
+Part 5
+-------
+
+1. hdfs dfs -moveToLocal /user/assignment1/fileToBeUpload.txt .
+
+
+Part 6
+-------
+
+1. hdfs dfs -cat /user/assignment1/fileToBeUpload.txt
+2. hdfs dfs -cat /user/assignment1/fileToBeUpload.txt | head -n 1
+3. hdfs dfs -cat /user/assignment1/fileToBeUpload.txt | tail -n 1
+
+
+Part 7
+-------
+
+1. hdfs dfs -mkdir -p /user/gaurav/data/data1/nested
+
+
+Part 8
+-------
+
+1. hdfs dfs -cp /user/assignment1/fileToBeUpload.txt /user/assignment1/test/
+
+
+
+Part 9
+-------
+
+1. hdfs dfs -stat "%F %b %u %g %n %o %r %y" /user/assignment1/test/fileToBeUpload.txt
+
+
+Part 10
+-------
+
+1. hdfs dfs -appendToFile appendFile.txt /user/assignment1/test/fileToBeUpload.txt
+
+Part 12
+--------
+
+1. hdfs dfs -rm /user/assignment1/test/fileToBeUpload.txt
+
+Part 13
+--------
+
+1. hdfs dfs -rm -r /user/assignment1/test/
+
+
+Part 14
+--------
+
+1. hdfs dfs -find /user/gaurav/newFolder "appendFile.txt"
+
+
+Part 15
+--------
+
+1.  hdfs dfs -checksum /user/assignment1/fileToBeUpload.txt
+
+
+Part 16
+--------
+
+1. hdfs dfs -chgrp hdfs /user/assignment1/fileToBeUpload.txt
+
+note : user must be of specified group
+
+2. hdfs dfs -chown -R test:hdfs /user/assignment1/fileToBeUpload.txt
+
+3. hdfs dfs -setfacl -m hdfs:hadoop:r--
+
+note : user must be super user
+
+Part 17
+--------
+
+1. hdfs dfs -du /user/assignment1/fileToBeUpload.txt
+
+
+EXERCISE 2
+----------
+
+1. Go to /usr/hdp/current/hdfs-client/etc/hadoop and edit hdfs-site.xml. Edit property dfs.blocksize: 268435456
+2. Go to /usr/hdp/current/hdfs-client/etc/hadoop and edit yarn-site.xml. Edit property yarn.nodemanager.disk-health-checker.max-disk-utilization-per-disk-percentage to 80
+3. Go to /usr/hdp/current/hdfs-client/etc/hadoop and edit hdfs-site.xml. Edit propertydfs.replication: 3
+
+EXERCISE 3
+------------
+
+1. su -l hdfs -c "/usr/hdp/current/hadoop-hdfs-datanode/../hadoop/sbin/hadoop-daemon.sh stop datanode"
+
+2. su -l hdfs -c "/usr/hdp/current/hadoop-hdfs-namenode/../hadoop/sbin/hadoop-daemon.sh stop secondarynamenode"
+
+3. su -l hdfs -c "/usr/hdp/current/hadoop-hdfs-namenode/../hadoop/sbin/hadoop-daemon.sh stop namenode"
+
+4. su -l hdfs -c "/usr/hdp/current/hadoop-hdfs-datanode/../hadoop/sbin/hadoop-daemon.sh start datanode"
+
+5. su -l hdfs -c "/usr/hdp/current/hadoop-hdfs-namenode/../hadoop/sbin/hadoop-daemon.sh start secondarynamenode"
+
+6. su -l hdfs -c "/usr/hdp/current/hadoop-hdfs-namenode/../hadoop/sbin/hadoop-daemon.sh start namenode"
+
+7. su -l yarn -c "/usr/hdp/current/hadoop-yarn-nodemanager/sbin/yarn-daemon.sh stop nodemanager"
+
+8. su -l yarn -c "/usr/hdp/current/hadoop-yarn-resourcemanager/sbin/yarn-daemon.sh stop resourcemanager"
+
+9. su -l yarn -c "/usr/hdp/current/hadoop-yarn-nodemanager/sbin/yarn-daemon.sh start nodemanager"
+
+10. su -l yarn -c "/usr/hdp/current/hadoop-yarn-resourcemanager/sbin/yarn-daemon.sh start resourcemanager"
+
+11. hdfs fsck /
+    hdfs dfsadmin -report
+	hdfs haadmin -checkhealth "nodeid"
+
+12. hdfs dfsadmin -safemode enter
+
+13. hdfs dfsadmin -safemode leave
+
+EXERCISE 4
+-----------
+1. hadoop jar createDir.jar CreateDirectory testFolder (check under /user/gaurav/)
+2. hadoop jar createDir.jar CreateDirectory testFolder2 (check under /user/gaurav/)
+3. hadoop jar deleteDir.jar DeleteDirectory testFolder2
+4. hadoop jar createFile.jar CreateFile /testFolder/test.txt

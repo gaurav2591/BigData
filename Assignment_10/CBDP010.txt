@@ -1,0 +1,17 @@
+zkServer.sh start
+zkCli.sh -server 127.0.0.1:2181
+
+1. create /m1028036 my_znode
+2. create /m1028036/childNode1 firstChildNode
+3. create -e /m1028036/childNode2Ephemeral secondChildNode
+4. ls /m1028036
+5. quit. Node will be deleted
+6. rmr /m1028036/childNode2
+7. create -s /m1028036/childNode1/seqNode sequenceNode
+8. Login in different putty client. Create sequenceNode in same root znode. Numbers should repeat.
+9. get /m1028036 1
+   set /m1028036 znode_updated
+10. get /m1028036 1 -> sets data watch
+   get /m1028036/childNode1 1 -> sets child watch
+   
+11. rmr /m1028036

@@ -1,0 +1,21 @@
+sed -i 1d drivers.csv
+sed -i 1d timesheet.csv
+hdfs dfs -mkdir /user/gaurav/hive/drivers/
+hdfs dfs -mkdir /user/gaurav/hive/timesheet/
+hdfs dfs -put drivers.csv  /user/gaurav/hive/drivers/
+hdfs dfs -put timesheet.csv  /user/gaurav/hive/timesheet/
+ 
+CREATE TABLE IF NOT EXISTS drivers_hive(driver_id INT, name STRING,ssn STRING,location STRING,certified CHAR(1), wage_plan STRING) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' STORED AS TEXTFILE location '/user/gaurav/hive/drivers';
+ 
+CREATE TABLE IF NOT EXISTS timesheets_hive(driver_id INT, weeks INT,hours_logged INT,miles_logged INT) ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' STORED AS TEXTFILE location '/user/gaurav/hive/timesheet';
+ 
+select d.driver_id, d.name, t.hours_logged from drivers_hive d,timesheets_hive t where d.driver_id=t.driver_id and d.driver_id =10;
+1.  select d.driver_id,SUM(t.hours_logged),d.name, case when d.wage_plan = 'hours' then SUM(t.hours_logged)*10 when d.wage_plan = 'miles' then SUM(t.hours_logged)*5 else null end as amount from drivers_hive d,timesheets_hive t where d.driver_id=t.driver_id group by d.driver_id,d.name,d.wage_plan;
+ 
+  
+2.  select d.driver_id,SUM(t.hours_logged)/COUNT(t.hours_logged),d.name,SUM(t.miles_logged)/COUNT(t.miles_logged) from drivers_hive d,timesheets_hive t where d.driver_id=t.driver_id group by d.driver_id,d.name;
+ 
+ 
+ 
+3. select t1.t1DI,t1.t1NAME,t1.t1SUM,t2.t2SUM,t3.t3SUM,t4.t4SUM from (select d.driver_id as t1DI,d.name as t1NAME,SUM(t.hours_logged) as t1SUM from drivers_hive d,timesheets_hive t where d.driver_id=t.driver_id and t.weeks>=1 and t.weeks<=12 group by d.driver_id,d.name) t1 left join (select d.driver_id as t2DI,SUM(t.hours_logged) as t2SUM from drivers_hive d,timesheets_hive t where d.driver_id=t.driver_id and t.weeks>=13 and t.weeks<=24 group by d.driver_id) t2 on t1.t1DI=t2.t2DI left join (select d.driver_id as t3DI,SUM(t.hours_logged) as t3SUM from drivers_hive d,timesheets_hive t where d.driver_id=t.driver_id and t.weeks>=25 and t.weeks<=36 group by d.driver_id) t3 on t1.t1DI=t3.t3DI left join (select d.driver_id as t4DI,SUM(t.hours_logged) as t4SUM from drivers_hive d,timesheets_hive t where d.driver_id=t.driver_id and t.weeks>=37 and t.weeks<=52 group by d.driver_id) t4 on t1.t1DI=t4.t4DI;
+ 

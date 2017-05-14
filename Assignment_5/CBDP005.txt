@@ -1,0 +1,98 @@
+Validation
+------------
+1. A = LOAD '/user/gaurav/testPig.csv' USING PigStorage(',') AS (diverId:chararray,name:chararray,ssn:chararray,location:chararray,certified:chararray,wagePlan:chararray);
+2. B = FILTER A BY (diverId MATCHES '^[0-9]*$') AND (name MATCHES '^[a-zA-Z0-9\\-\\s]+$') AND (wagePlan MATCHES '^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$');
+3. C = foreach B generate ((diverId IS NULL) ? 'NULL' : diverId) as diverId,((name IS NULL) ? 'NULL' : name) as name,((ssn IS NULL) ? 'NULL' : ssn) as ssn,((location IS NULL) ? 'NULL' : location) as location,((certified IS NULL) ? 'NULL' : certified) as certified,((wagePlan IS NULL) ? 'NULL' : wagePlan) as wagePlan;
+
+
+Total Hours
+------------
+
+A = LOAD '/user/gaurav/drivers.csv' USING PigStorage(',') AS (driverId:chararray,name:chararray,ssn:chararray,location:chararray,certified:chararray,wagePlan:chararray);
+
+B = LOAD '/user/gaurav/timesheet.csv' USING PigStorage(',') AS (driverId:chararray,week:chararray,hours:int,miles:int);
+
+C = JOIN A BY driverId, B BY driverId;
+
+D = GROUP C BY A::driverId;
+
+outputData = FOREACH D GENERATE group,SUM(C.B::hours);
+
+
+Average Hours
+--------------
+
+A = LOAD '/user/gaurav/drivers.csv' USING PigStorage(',') AS (driverId:chararray,name:chararray,ssn:chararray,location:chararray,certified:chararray,wagePlan:chararray);
+
+B = LOAD '/user/gaurav/timesheet.csv' USING PigStorage(',') AS (driverId:chararray,week:chararray,hours:int,miles:int);
+
+C = JOIN A BY driverId, B BY driverId;
+
+D = GROUP C BY A::driverId;
+
+outputData = FOREACH D GENERATE group,AVG(C.B::hours),AVG(C.B::miles);
+
+
+Quaterly
+-----------
+
+A = LOAD '/user/gaurav/drivers.csv' USING PigStorage(',') AS (driverId:chararray,name:chararray,ssn:chararray,location:chararray,certified:chararray,wagePlan:chararray);
+
+F = LOAD '/user/gaurav/timesheet.csv' USING PigStorage(',') AS (driverId:chararray,week:int,hours:int,miles:int);
+
+B = FILTER F BY week>=1 AND week<=13;
+
+C = JOIN A BY driverId, B BY driverId;
+
+D = GROUP C BY A::driverId;
+
+outputData = FOREACH D GENERATE group,SUM(C.B::hours);
+
+
+B = FILTER F BY week>=14 AND week<=26;
+
+C = JOIN A BY driverId, B BY driverId;
+
+D = GROUP C BY A::driverId;
+
+outputData1 = FOREACH D GENERATE group,SUM(C.B::hours);
+
+B = FILTER F BY week>=27 AND week<=39;
+
+C = JOIN A BY driverId, B BY driverId;
+
+D = GROUP C BY A::driverId;
+
+outputData2 = FOREACH D GENERATE group,SUM(C.B::hours);
+
+B = FILTER F BY week>=40 AND week<=52;
+
+C = JOIN A BY driverId, B BY driverId;
+
+D = GROUP C BY A::driverId;
+
+outputData3 = FOREACH D GENERATE group,SUM(C.B::hours);
+
+res = JOIN outputData BY group,outputData1  BY group,outputData2 BY group, outputData3 BY group;
+
+
+Obsfuction
+-------------
+
+A = LOAD '/user/gaurav/driversPig.csv' USING PigStorage(',') AS (driverId:chararray,name:chararray,ssn:chararray,location:chararray,certified:chararray,wagePlan:chararray);
+
+B = LOAD '/user/gaurav/timesheetPig.csv' USING PigStorage(',') AS (driverId:chararray,week:chararray,hours:int,miles:int);
+
+C = JOIN A BY driverId, B BY driverId;
+
+D = GROUP C BY A::driverId;
+
+outputData = FOREACH D GENERATE group,SUM(C.B::hours),FLATTEN(C.A::name);
+
+data = DISTINCT outputData;
+
+data1 = FOREACH data GENERATE group,$1,FLATTEN(shuffleUdf.Shuffle($2));
+
+
+
+

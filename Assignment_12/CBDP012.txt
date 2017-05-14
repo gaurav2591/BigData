@@ -1,0 +1,54 @@
+Kafka
+-------
+1. Commnad Line
+----------------
+1. Go to /usr/hdp/current/kafka-broker
+2. Start zookeeper 			  - bin/zookeeper-server-start.sh config/zookeeper.properties	
+2. Start broker    			  - bin/kafka-server-start.sh config/server.properties
+3. Create Topic    			  - bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic myKafkaTopic
+4. Send message from producer - bin/kafka-console-producer.sh --broker-list sandbox.hortonworks.com:6667 --topic myKafkaTopic
+5. Recieve messa at consumer  - bin/kafka-console-consumer.sh --zookeeper localhost:2181 --topic myKafkaTopic --from-beginning
+
+
+
+
+2. Java Api
+------------
+1. Go to gauravJars folder.
+2. java -jar kafkaProducer.jar
+3. java -jar kafkaConsumer.jar
+
+
+3. Flume-Kafka-Twitter
+-------------------------
+1. Create flume-kafka-twitter.conf file and paste below details
+
+TwitterAppAgent.sources = Twitter
+TwitterAppAgent.channels = MemChannel
+TwitterAppAgent.sinks = Kafka
+
+TwitterAppAgent.sources.Twitter.type = org.flume.twitter.TwitterSource
+TwitterAppAgent.sources.Twitter.channels = MemChannel
+TwitterAppAgent.sources.Twitter.consumerKey = 
+TwitterAppAgent.sources.Twitter.consumerSecret = 
+TwitterAppAgent.sources.Twitter.accessToken = 
+TwitterAppAgent.sources.Twitter.accessTokenSecret = 
+TwitterAppAgent.sources.Twitter.keywords = hadoop, hive
+
+TwitterAppAgent.sinks.Kafka.channel = MemChannel
+TwitterAppAgent.sinks.Kafka.type = org.apache.flume.sink.kafka.KafkaSink
+TwitterAppAgent.sinks.Kafka.topic = flumekafka
+TwitterAppAgent.sinks.Kafka.brokerList = sandbox.hortonworks.com:6667
+TwitterAppAgent.sinks.Kafka.batchSize = 1000
+
+TwitterAppAgent.channels.MemChannel.type = memory
+TwitterAppAgent.channels.MemChannel.capacity = 10000
+TwitterAppAgent.channels.MemChannel.transactionCapacity = 100
+
+2. Go to /usr/hdp/current/kafka-broker
+3. Start zookeeper 			  - bin/zookeeper-server-start.sh config/zookeeper.properties	
+4. Start broker    			  - bin/kafka-server-start.sh config/server.properties
+5. Create Topic    			  - bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic flumekafka
+6. Start Consumer             - bin/kafka-console-consumer.sh --zookeeper localhost:2181 --topic flumekafka --from-beginning
+
+7. flume-ng agent -n TwitterAppAgent --conf ./conf/ -f /usr/hdp/current/flume-server/conf/flume-kafka-twitter.conf -Dflume.root.logger=DEBUG,console

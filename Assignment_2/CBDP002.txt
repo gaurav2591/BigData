@@ -1,0 +1,84 @@
+Start Hbase
+----------------
+
+1. su - hbase -c "/usr/hdp/current/hbase-master/bin/hbase-daemon.sh start master; sleep 25"
+
+2. su - hbase -c "/usr/hdp/current/hbase-regionserver/bin/hbase-daemon.sh start regionserver"
+
+Stop Hbase
+----------------
+
+1. su -l hbase -c "/usr/hdp/current/hbase-regionserver/bin/hbase-daemon.sh stop regionserver"
+
+2. su -l hbase -c "/usr/hdp/current/hbase-master/bin/hbase-daemon.sh stop master"
+
+Check Processes
+----------------
+
+1. ps -ef | grep -i hmaster
+
+2. ps -ef | grep -i hregion
+
+
+Create Table
+---------------
+
+1. create 'blog','info','content'
+
+2. alter 'blog',NAME => 'info',VERSIONS => 3
+
+3. alter 'blog',NAME =>'content',VERSIONS => 3
+
+4. describe 'blog'
+
+
+Putting Data
+---------------
+
+1. put 'blog','row1','info:title','test2'
+
+1. put 'blog','row2','info:title','title2'
+1. put 'blog','row2','info:description','description2'
+1. put 'blog','row2','info:author','author2'
+1. put 'blog','row2','info:url','url2'
+1. put 'blog','row2','info:category','category2'
+1. put 'blog','row2','info:tags','tags2'
+1. put 'blog','row2','info:likes','likes2'
+1. put 'blog','row2','info:dateAndTime','16-04-2017 11:00'
+put 'blog','row2','content:markUp/markDown','markUp2'
+
+2. scan 'blog', {VERSIONS=>3}
+
+Updating Data
+---------------
+put 'blog','row2','info:title','titlechanged2'
+
+
+Read Data
+---------------
+
+get 'blog','row2'
+
+Delete Data
+---------------
+put 'blog','row1','info:description','description1'
+delete 'blog', 'row1', 'info:description',1492331897156
+
+deleteall 'blog', 'row1'
+
+
+Bulk Loading Data
+-------------------
+1. vi hbaseBlog.tsv
+
+	row3    title3  description3    author3 url3    category3       tags3   likes3  16-04-2017-12:00        markUp3
+	row4    title4  description4    author4 url4    category4       tags4   likes4  16-04-2017-13:00        markUp4
+
+1. hdfs dfs -put hbaseBlog.tsv /user/gaurav/
+
+2. vi putDataToBlog.pig
+
+	A = LOAD '/user/gaurav/hbaseBlog.tsv' USING PigStorage('\t') AS (id:chararray,title:chararray,description:chararray,author:chararray,url:chararray,category:chararray,tags:chararray,likes:chararray,dateAndTime:chararray,markUpmarkDown:chararray);
+	STORE A INTO 'hbase://blog' USING org.apache.pig.backend.hadoop.hbase.HBaseStorage('info:title,info:description,info:author,info:url,info:category,info:tags,info:likes,info:dateAndTime,content:markUpmarkDown');
+	
+3. 	pig putDataToBlog.pig

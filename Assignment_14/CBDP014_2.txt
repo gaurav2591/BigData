@@ -1,0 +1,59 @@
+1. Open spark shell: spark-shell
+
+2. Execute below commands:
+
+import org.apache.spark.mllib.clustering.KMeans
+
+import org.apache.spark.sql._
+
+val tweets = sc.textFile("hdfs://sandbox.hortonworks.com:8020/user/gaurav/spark/gistfile1.txt")
+
+tweets.first()
+
+val sqlContext  = new org.apache.spark.sql.SQLContext(sc)
+
+val tweetTable = sqlContext.jsonFile("hdfs://sandbox.hortonworks.com:8020/user/gaurav/spark/gistfile1.txt").cache()
+
+tweetTable.registerTempTable("tweetTable")
+
+tweetTable.printSchema()
+
+sqlContext.sql("SELECT text FROM tweetTable LIMIT 10").collect().foreach(println)
+
+sqlContext.sql("SELECT user.lang, COUNT(*) as cnt FROM tweetTable GROUP BY user.lang ORDER BY cnt DESC LIMIT 25").collect.foreach(println)
+
+val texts = sqlContext.sql("SELECT text from tweetTable")
+
+val res = texts.map(_.toString)
+
+import org.apache.spark.mllib.feature.HashingTF
+
+import org.apache.spark.mllib.clustering.KMeans
+
+import org.apache.spark.mllib.linalg.Vector
+
+val tf = new HashingTF(1000)
+
+def featurize(s: String): Vector = { tf.transform(s.sliding(2).toSeq) }
+
+val vectors = res.map(featurize).cache()
+
+val model = KMeans.train(vectors, 10, 20)
+
+sc.makeRDD(model.clusterCenters, 10).saveAsObjectFile("hdfs://sandbox.hortonworks.com:8020/user/gaurav/spark/model")
+	
+	val some_tweets = res.take(100)
+    println("----Example tweets from the clusters")
+    for (i <- 0 until 10) {
+      println(s"\nCLUSTER $i:")
+      some_tweets.foreach { t =>
+        if (model.predict(featurize(t)) == i) {
+          println(t)
+        }
+      }
+    }
+	
+	
+	
+spark-submit --class FilterOnCluster --master local cluster-0.0.1-SNAPSHOT-jar-with-dependencies.jar 7
+scp -P 1024 yorbit313@172.17.0.1:/home/yorbit313/jars/cluster-0.0.1-SNAPSHOT-jar-with-dependencies.jar .

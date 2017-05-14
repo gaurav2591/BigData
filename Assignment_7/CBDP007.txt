@@ -1,0 +1,95 @@
+create table driver_details(driverId int, name varchar(200), ssn varchar(200), location varchar(200), certified varchar(10), wagePlan varchar(200));
+
+
+create table driver_timesheet(timesheetId int, driverId int, week int, hoursLogged int, milesLogged int);
+
+ALTER TABLE driver_timesheet ADD PRIMARY KEY (timesheetId);
+
+ALTER TABLE driver_timesheet MODIFY COLUMN timesheetId INT auto_increment;
+
+ALTER TABLE driver_details ADD PRIMARY KEY (driverId);
+
+ALTER TABLE driver_details MODIFY COLUMN driverId INT auto_increment;
+
+
+scp -P 1024 yorbit313@172.17.0.1:/home/yorbit313/drivers.csv .
+scp -P 1024 yorbit313@172.17.0.1:/home/yorbit313/timesheet.csv .
+
+ALTER TABLE driver_timesheet DROP COLUMN timesheetId;
+
+ALTER TABLE driver_timesheet ADD timesheetId int;
+
+
+LOAD DATA INFILE '/var/lib/mysql-files/timesheet.csv' INTO TABLE cab_service.driver_timesheet FIELDS TERMINATED BY ',' LINES TERMINATED BY '\r\n' IGNORE 1 ROWS;
+
+LOAD DATA INFILE '/var/lib/mysql-files/drivers.csv' INTO TABLE cab_service.driver_details FIELDS TERMINATED BY ',' LINES TERMINATED BY '\r\n' IGNORE 1 ROWS;
+
+
+ALTER TABLE driver_timesheet add timesheetId INT NOT NULL primary KEY AUTO_INCREMENT;
+
+
+1. sqoop import --connect jdbc:mysql://localhost/cab_service --driver com.mysql.jdbc.Driver --username root --P --table driver_details --target-dir /user/gaurav/sqoop/driver_details --m 1
+   sqoop import --connect jdbc:mysql://localhost/cab_service --driver com.mysql.jdbc.Driver --username root --P --table driver_timesheet --target-dir /user/gaurav/sqoop/driver_timesheet --m 1
+   
+   sqoop import --connect jdbc:mysql://localhost/cab_service --driver com.mysql.jdbc.Driver --username root --P --table driver_details --target-dir /user/gaurav/sqoop/driver_details_direct --direct --m 1
+   
+   sqoop import -Dmapreduce.job.user.classpath.first=true --connect jdbc:mysql://localhost/cab_service --driver com.mysql.jdbc.Driver --username root --P --table driver_details --target-dir /user/gaurav/sqoop/driver_details/avro2 --as-avrodatafile --m 1
+   
+   sqoop import --connect jdbc:mysql://localhost/cab_service --driver com.mysql.jdbc.Driver --username root --P --table driver_details --hbase-table drivers --column-family info --hbase-row-key driverId --hbase-create-table -m 1
+   
+    Update or add the following configs to hbase-site.xml 
+--> phoenix.query.timeoutMs=1800000 
+--> hbase.regionserver.lease.period = 1200000 
+--> hbase.rpc.timeout = 1200000 
+--> hbase.client.scanner.caching = 1000 
+--> hbase.client.scanner.timeout.period = 1200000 
+   
+   
+   
+
+
+
+
+CREATE TABLE driver_details (
+    driverId int AUTO_INCREMENT,
+    name varchar(200),
+    ssn varchar(200),
+	location varchar(200),
+	certified varchar(10),
+	wagePlan varchar(200),
+    PRIMARY KEY (driverId)
+);
+
+
+
+CREATE TABLE driver_timesheet (
+    driverId int,
+    week int,
+    hoursLogged int,
+	milesLogged int,
+	timesheetId int AUTO_INCREMENT,
+    PRIMARY KEY (timesheetId)
+);
+
+
+
+
+grant all privileges on cab_service_hdfs.* to ''@localhost ;
+
+sqoop export --connect jdbc:mysql://localhost/cab_service_hdfs --driver com.mysql.jdbc.Driver --table driver_details -m 1 --export-dir /user/gaurav/sqoop/part-m-00000
+
+sqoop export --connect jdbc:mysql://localhost/cab_service_hdfs --driver com.mysql.jdbc.Driver --table driver_timesheet -m 1 --columns driverId,week,hoursLogged,milesLogged --export-dir /user/gaurav/timesheet.csv
+
+
+Incremental Update
+-------------------
+
+INSERT INTO driver_details VALUES (44,'GAURAV MEHR','123456789','TESTDATA','Y','hours');
+INSERT INTO driver_timesheet(driverId,week,hoursLogged,milesLogged) VALUES (44,1,70,2500);
+
+
+sqoop import --connect jdbc:mysql://localhost/cab_service_hdfs --driver com.mysql.jdbc.Driver --table driver_details --username root -P --check-column driverId --incremental append --last-value 43 --target-dir /user/gaurav/sqoop/incremental/drivers
+
+sqoop import --connect jdbc:mysql://localhost/cab_service_hdfs --driver com.mysql.jdbc.Driver --table driver_timesheet --username root -P --check-column timesheetId --incremental append --last-value 1768 --columns driverId,week,hoursLogged,milesLogged --target-dir /user/gaurav/sqoop/incremental/drivers
+
+ALTER TABLE driver_timesheet DROP COLUMN timesheetId;

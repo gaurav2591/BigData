@@ -1,0 +1,31 @@
+Flume
+-------
+1. Create flume-twitter.conf file and paste below details
+
+TwitterAppAgent.sources = Twitter
+TwitterAppAgent.channels = MemChannel
+TwitterAppAgent.sinks = HDFS
+
+TwitterAppAgent.sources.Twitter.type = org.flume.twitter.TwitterSource
+TwitterAppAgent.sources.Twitter.channels = MemChannel
+TwitterAppAgent.sources.Twitter.consumerKey =
+TwitterAppAgent.sources.Twitter.consumerSecret =
+TwitterAppAgent.sources.Twitter.accessToken =
+TwitterAppAgent.sources.Twitter.accessTokenSecret =
+TwitterAppAgent.sources.Twitter.keywords = hadoop, hive
+
+TwitterAppAgent.sinks.HDFS.channel = MemChannel
+TwitterAppAgent.sinks.HDFS.type = hdfs
+TwitterAppAgent.sinks.HDFS.hdfs.path = hdfs://sandbox.hortonworks.com:8020/user/gaurav/flume/twitter/
+TwitterAppAgent.sinks.HDFS.hdfs.fileType = DataStream
+TwitterAppAgent.sinks.HDFS.hdfs.writeFormat = Text
+TwitterAppAgent.sinks.HDFS.hdfs.batchSize = 1000
+TwitterAppAgent.sinks.HDFS.hdfs.rollSize = 0
+TwitterAppAgent.sinks.HDFS.hdfs.rollCount = 10000
+
+TwitterAppAgent.channels.MemChannel.type = memory
+TwitterAppAgent.channels.MemChannel.capacity = 10000
+TwitterAppAgent.channels.MemChannel.transactionCapacity = 100
+
+2. Download java file and export to jar and Place jar TwitterSource.jar in lib folder.
+3. flume-ng agent -n TwitterAppAgent --conf ./conf/ -f /usr/hdp/current/flume-server/conf/flume-twitter.conf -Dflume.root.logger=DEBUG,console

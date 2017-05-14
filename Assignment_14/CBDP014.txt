@@ -1,0 +1,7 @@
+spark-submit --class com.spark.Twitter --master local TwitterHashTags-0.0.1-SNAPSHOT-jar-with-dependencies.jar
+scp -P 1024 yorbit313@172.17.0.1:/home/yorbit313/jars/TwitterHashTags-0.0.1-SNAPSHOT-jar-with-dependencies.jar .
+
+hdfs dfs -rm -r /user/gaurav/spark/twitter/top10HashTags/*
+hdfs dfs -ls /user/gaurav/spark/twitter/top10HashTags/
+ 
+hdfs dfs -cat /user/gaurav/spark/twitter/top10HashTags/TopHashTags_1494271664401/part*
