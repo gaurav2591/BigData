@@ -1,0 +1,11 @@
+Remove jar
+----------------
+rm stormAnalysis-0.0.1-SNAPSHOT-jar-with-dependencies.jar
+
+Copy jar
+-----------------
+scp -P 1024 yorbit710@172.17.0.1:/home/yorbit710/jars/stormAnalysis-0.0.1-SNAPSHOT-jar-with-dependencies.jar .
+
+Run Storm jar
+-----------------
+storm jar stormAnalysis-0.0.1-SNAPSHOT-jar-with-dependencies.jar com.storm.twitter.stormAnalysis.TwittterTopology
