@@ -1,0 +1,41 @@
+COPY CUSTOMERS AND HOUSEHOLD FILES
+-----------------------------------
+
+[root@sandbox kafka-broker]# scp -P 1024 yorbit710@172.17.0.1:/home/yorbit710/jars/Customers.txt .
+[root@sandbox kafka-broker]# scp -P 1024 yorbit710@172.17.0.1:/home/yorbit710/jars/HouseHold.txt .
+
+CREATE TOPIC WHICH WILL BE USED FOR BOTH FILES
+-----------------------------------------------
+bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic customersTopic
+
+MOVE CONTENTS OF FILES TO TOPIC
+--------------------------------
+bin/kafka-console-producer.sh --broker-list sandbox.hortonworks.com:6667 --topic customersTopic < Customers.txt
+bin/kafka-console-producer.sh --broker-list sandbox.hortonworks.com:6667 --topic householdTopic < HouseHold.txt
+
+NEW FILES ARE CREATED CONTAING TEST DATA AND ARE MOVED TO TOPIC
+-----------------------------------------------------------------
+bin/kafka-console-producer.sh --broker-list sandbox.hortonworks.com:6667 --topic customersTopic < Customers1.txt
+bin/kafka-console-producer.sh --broker-list sandbox.hortonworks.com:6667 --topic householdTopic < HouseHold1.txt
+
+COPY JAR
+-------------
+scp -P 1024 yorbit710@172.17.0.1:/home/yorbit710/jars/storeToHDFS-0.0.1-SNAPSHOT-jar-with-dependencies.jar .
+
+RUN JAR
+---------
+spark-submit --class com.spark.storeToHDFS.LoadDataToHDFS --master local storeToHDFS-0.0.1-SNAPSHOT-jar-with-dependencies.jar customers   (FOR CUSTOMERS)
+
+spark-submit --class com.spark.storeToHDFS.LoadDataToHDFS --master local storeToHDFS-0.0.1-SNAPSHOT-jar-with-dependencies.jar household   (FOR HOUSEHOLD)
+
+RUN BELOW COMAND TO START PROCESSING
+------------------------------------
+bin/kafka-console-producer.sh --broker-list sandbox.hortonworks.com:6667 --topic customersTopic < Customers1.txt
+
+                                             OR
+											 
+bin/kafka-console-producer.sh --broker-list sandbox.hortonworks.com:6667 --topic householdTopic < HouseHold1.txt
+
+FILE PATHS
+------------
+CHECK FILES UNDER /user/root											 
