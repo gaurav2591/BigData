@@ -1,0 +1,13 @@
+Start Kafka
+---------------
+bin/kafka-server-start.sh config/server.properties
+
+bin/kafka-console-consumer.sh --zookeeper localhost:2181 --topic flumekafka1 --from-beginning
+
+Start Flume
+---------------
+flume-ng agent -n TwitterAppAgent --conf ./conf/ -f /usr/lib/flume-ng/conf/flume-kafka-twitter.conf -Dflume.root.logger=DEBUG,console
+
+Execute jar
+---------------
+spark-submit --class com.spark.project301_3.TweetsToHDFS --master local /home/cloudera/Desktop/project301_3-0.0.1-SNAPSHOT-jar-with-dependencies.jar
